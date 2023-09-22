@@ -1,7 +1,26 @@
 import Head from 'next/head';
+import { useEffect, useState } from 'react'
+import io from 'socket.io-client'
+
+import TextField from '@mui/material/TextField'
+import IconButton from '@mui/material/IconButton'
+import NorthIcon from '@mui/icons-material/North'
+
 import styles from '../styles/Home.module.css';
 
+let socket
+
 export default function Home() {
+  const message = useState('')
+
+  const initializeSocket = async () => {
+    socket = io('http://localhost:8080')
+  }
+
+  useEffect(() => {
+    initializeSocket()
+  }, [])
+
   return (
     <div className={styles.container}>
       <Head>
@@ -46,6 +65,20 @@ export default function Home() {
               Instantly deploy your Next.js site to a public URL with Vercel.
             </p>
           </a>
+        </div>
+        <div>
+          <div>
+
+          </div>
+          <div>
+            <TextField
+              placeholder='Message here ..'
+              variant='outlined'
+            />
+            <IconButton>
+              <NorthIcon />
+            </IconButton>
+          </div>
         </div>
       </main>
 
