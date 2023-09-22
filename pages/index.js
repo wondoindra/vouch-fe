@@ -4,6 +4,7 @@ import io from 'socket.io-client'
 
 import TextField from '@mui/material/TextField'
 import IconButton from '@mui/material/IconButton'
+import Button from '@mui/material/Button'
 import NorthIcon from '@mui/icons-material/North'
 
 import styles from '../styles/Home.module.css';
@@ -11,15 +12,38 @@ import styles from '../styles/Home.module.css';
 let socket
 
 export default function Home() {
-  const message = useState('')
+  const [connected, setConnected] = useState(false)
+  const [message, setMessage] = useState('')
+  const [chats, setChats] = useState([])
+  const [username, setUsername] = useState('')
+  const [roomId, setRoomId] = useState('')
 
   const initializeSocket = async () => {
     socket = io('http://localhost:8080')
+
+    socket.on('new-message', data => {
+      updateChat(data)
+    })
   }
 
   useEffect(() => {
     initializeSocket()
   }, [])
+
+  const updateChat = (data) => {
+    setChats(oldChats => [...oldChats, data])
+  }
+
+  const joinRoom = () => {
+    if (!username || !roomId) return
+    setConnected(true)
+  }
+
+  const sendMessage = () => {
+    socket.emit('send-message', { username, message })
+    updateChat({ username, message })
+    setMessage('')
+  }
 
   return (
     <div className={styles.container}>
@@ -67,18 +91,52 @@ export default function Home() {
           </a>
         </div>
         <div>
-          <div>
-
-          </div>
-          <div>
-            <TextField
-              placeholder='Message here ..'
-              variant='outlined'
-            />
-            <IconButton>
-              <NorthIcon />
-            </IconButton>
-          </div>
+          {connected ? (
+            <div>
+              <div>
+                {chats.map((chat, index) => (
+                  <div key={`${index}`}>
+                    <div>{chat.username}</div>
+                    <div>{chat.message}</div>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <TextField
+                  placeholder='Message here ..'
+                  variant='outlined'
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
+                />
+                <IconButton
+                  onClick={sendMessage}
+                >
+                  <NorthIcon />
+                </IconButton>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <TextField
+                placeholder='Username'
+                variant='outlined'
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+              />
+              <TextField
+                placeholder='RoomID'
+                variant='outlined'
+                value={roomId}
+                onChange={e => setRoomId(e.target.value)}
+              />
+              <Button
+                variant='contained'
+                onClick={joinRoom}
+              >
+                Join
+              </Button>
+            </div>
+          )}
         </div>
       </main>
 
